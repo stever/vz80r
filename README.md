@@ -1,10 +1,8 @@
-# v6502r
+# vz80r
 
-Visual6502 and VisualZ80 Remixed
+VisualZ80 Remixed
 
-WASM Version for 6502: https://floooh.github.io/visual6502remix/
-
-...and for the Z80: https://floooh.github.io/visualz80remix/
+WASM Version for the Z80: https://floooh.github.io/visualz80remix/
 
 TL;DR: Take the [visual6502](https://github.com/trebonian/visual6502) project
 and turn it into a native+wasm app via
@@ -13,10 +11,6 @@ ImGui](https://github.com/ocornut/imgui/) and
 [Sokol](https://github.com/floooh/sokol).
 
 # Feature Gallery
-
-6502 simulation:
-
-![6502 screenshot](screenshots/v6502r.jpg)
 
 Z80 simulation:
 
@@ -61,7 +55,6 @@ To build and run the native version, run:
 ```
 > ./fips build
 ...
-> ./fips run v6502r
 > ./fips run vz80r
 ```
 
@@ -73,7 +66,6 @@ To build the WASM version:
 > ./fips setup emscripten
 > ./fips set config wasm-ninja-release
 > ./fips build
-> ./fips run v6502r
 > ./fips run vz80r
 ```
 

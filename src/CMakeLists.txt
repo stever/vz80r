@@ -37,20 +37,6 @@ set(SOURCES
     common.h
 )
 
-fips_begin_app(v6502r windowed)
-    fips_vs_warning_level(3)
-    fips_files(${SOURCES})
-    fips_dir(m6502)
-    fips_files(segdefs.c segdefs.h)
-    fips_files(nodenames.c nodenames.h nodegroups.h)
-    fips_deps(common perfect6502 asmx_6502)
-fips_end_app()
-target_compile_definitions(v6502r PRIVATE CHIP_6502)
-target_include_directories(v6502r PRIVATE m6502)
-if (FIPS_EMSCRIPTEN)
-    target_link_options(v6502r PUBLIC --shell-file ${CMAKE_SOURCE_DIR}/src/m6502/shell.html)
-endif()
-
 fips_begin_app(vz80r windowed)
     fips_vs_warning_level(3)
     fips_files(${SOURCES})

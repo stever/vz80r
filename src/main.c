@@ -15,27 +15,14 @@
 #include "segdefs.h"
 
 const char* init_src =
-#if defined(CHIP_6502)
-    "\tlda #0\n"
-    "loop:\tjsr func\n"
-    "\tjmp loop\n"
-    "func:\tinx\n"
-    "\tdey\n"
-    "\tinc data\n"
-    "\tsec\n"
-    "\tadc #2\n"
-    "\trts\n"
-    "data:\tdb $40\n\n";
-#elif defined(CHIP_Z80)
-    "\tld sp,stack\n"
-    "loop:\tcall func\n"
-    "\tjr loop\n"
-    "func:\tld hl,data\n"
-    "\tinc (hl)\n"
-    "\tret\n"
-    "data:\tdb 40h\n"
-    "stack:\torg 30h\n";
-#endif
+        "\tld sp,stack\n"
+        "loop:\tcall func\n"
+        "\tjr loop\n"
+        "func:\tld hl,data\n"
+        "\tinc (hl)\n"
+        "\tret\n"
+        "data:\tdb 40h\n"
+        "stack:\torg 30h\n";
 
 static void app_init(void) {
     util_init();
@@ -43,9 +30,6 @@ static void app_init(void) {
         .seg_vertices = {
             [0] = SG_RANGE(seg_vertices_0),
             [1] = SG_RANGE(seg_vertices_1),
-            #if !defined(CHIP_Z80)
-            [2] = SG_RANGE(seg_vertices_2),
-            #endif
             [3] = SG_RANGE(seg_vertices_3),
             [4] = SG_RANGE(seg_vertices_4),
             [5] = SG_RANGE(seg_vertices_5),
@@ -71,12 +55,6 @@ static void app_init(void) {
                 .verts = (const pick_vertex_t*) seg_vertices_1,
                 .num_verts = sizeof(seg_vertices_1) / 8,
             },
-            #if !defined(CHIP_Z80)
-            [2] = {
-                .verts = (const pick_vertex_t*) seg_vertices_2,
-                .num_verts = sizeof(seg_vertices_2) / 8,
-            },
-            #endif
             [3] = {
                 .verts = (const pick_vertex_t*) seg_vertices_3,
                 .num_verts = sizeof(seg_vertices_3) / 8,

@@ -15,11 +15,7 @@
 #define TRACE_FLIPBIT_CLK (1<<0)
 #define TRACE_FLIPBIT_OP (1<<1)
 
-#if defined(CHIP_6502)
-#define WINDOW_TITLE "Visual 6502 Remix"
-#elif defined(CHIP_Z80)
 #define WINDOW_TITLE "Visual Z80 Remix"
-#endif
 
 static const uint8_t gfx_visual_node_inactive = 48;
 static const uint8_t gfx_visual_node_active = 160;

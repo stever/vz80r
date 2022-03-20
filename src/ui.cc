@@ -12,13 +12,8 @@
 #include "sokol_imgui.h"
 
 #define CHIPS_IMPL
-#if defined(CHIP_6502)
-#define UI_DASM_USE_M6502
-#include "chips/m6502dasm.h"
-#elif defined(CHIP_Z80)
 #define UI_DASM_USE_Z80
 #include "chips/z80dasm.h"
-#endif
 #include "chips/ui_memedit.h"
 #include "chips/ui_util.h"
 #include "chips/ui_dasm.h"
@@ -66,68 +61,43 @@ typedef struct {
     int width;
 } ui_tracelog_column_t;
 
-#if defined(CHIP_6502)
-#define UI_TRACELOG_NUM_COLUMNS (19)
-static const ui_tracelog_column_t ui_tracelog_columns[UI_TRACELOG_NUM_COLUMNS] = {
-    { "Cycle/h", ImGuiTableColumnFlags_None, 7 },
-    { "SYNC", ImGuiTableColumnFlags_NoClip, 4 },
-    { "RW", ImGuiTableColumnFlags_NoClip, 2 },
-    { "AB", ImGuiTableColumnFlags_NoClip, 4 },
-    { "DB", ImGuiTableColumnFlags_NoClip, 2 },
-    { "PC", ImGuiTableColumnFlags_NoClip, 4 },
-    { "OP", ImGuiTableColumnFlags_NoClip, 2 },
-    { "A", ImGuiTableColumnFlags_NoClip, 2 },
-    { "X", ImGuiTableColumnFlags_NoClip, 2 },
-    { "Y", ImGuiTableColumnFlags_NoClip, 2 },
-    { "S", ImGuiTableColumnFlags_NoClip, 2 },
-    { "P", ImGuiTableColumnFlags_NoClip, 2 },
-    { "Watch", ImGuiTableColumnFlags_NoClip, 5 },
-    { "Flags", ImGuiTableColumnFlags_NoClip, 8 },
-    { "IRQ", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 3 },
-    { "NMI", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 3 },
-    { "RES", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 3 },
-    { "RDY", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 3 },
-    { "Asm", ImGuiTableColumnFlags_NoClip, 8 },
-};
-#elif defined(CHIP_Z80)
 #define UI_TRACELOG_NUM_COLUMNS (34)
 static const ui_tracelog_column_t ui_tracelog_columns[UI_TRACELOG_NUM_COLUMNS] = {
-    { "Cycle/h", ImGuiTableColumnFlags_None, 7 },
-    { "M1", ImGuiTableColumnFlags_NoClip, 2 },
-    { "MREQ", ImGuiTableColumnFlags_NoClip, 4 },
-    { "IORQ", ImGuiTableColumnFlags_NoClip, 4 },
-    { "RFSH", ImGuiTableColumnFlags_NoClip, 4 },
-    { "RD", ImGuiTableColumnFlags_NoClip, 2 },
-    { "WR", ImGuiTableColumnFlags_NoClip, 2 },
-    { "INT", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 3 },
-    { "NMI", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 3 },
-    { "WAIT", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "HALT", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "AB", ImGuiTableColumnFlags_NoClip, 4 },
-    { "DB", ImGuiTableColumnFlags_NoClip, 2 },
-    { "PC", ImGuiTableColumnFlags_NoClip, 4 },
-    { "OP", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 2 },
-    { "AF", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "BC", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "DE", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "HL", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "AF'", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "BC'", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "DE'", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "HL'", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "IX", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "IY", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "SP", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "WZ", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "I", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 2 },
-    { "R", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 2 },
-    { "IM", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 2 },
-    { "IFF1", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
-    { "Watch", ImGuiTableColumnFlags_NoClip, 5 },
-    { "Flags", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 8 },
-    { "Asm", ImGuiTableColumnFlags_NoClip, 12 }
+        { "Cycle/h", ImGuiTableColumnFlags_None, 7 },
+        { "M1", ImGuiTableColumnFlags_NoClip, 2 },
+        { "MREQ", ImGuiTableColumnFlags_NoClip, 4 },
+        { "IORQ", ImGuiTableColumnFlags_NoClip, 4 },
+        { "RFSH", ImGuiTableColumnFlags_NoClip, 4 },
+        { "RD", ImGuiTableColumnFlags_NoClip, 2 },
+        { "WR", ImGuiTableColumnFlags_NoClip, 2 },
+        { "INT", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 3 },
+        { "NMI", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 3 },
+        { "WAIT", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "HALT", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "AB", ImGuiTableColumnFlags_NoClip, 4 },
+        { "DB", ImGuiTableColumnFlags_NoClip, 2 },
+        { "PC", ImGuiTableColumnFlags_NoClip, 4 },
+        { "OP", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 2 },
+        { "AF", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "BC", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "DE", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "HL", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "AF'", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "BC'", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "DE'", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "HL'", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "IX", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "IY", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "SP", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "WZ", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "I", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 2 },
+        { "R", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 2 },
+        { "IM", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 2 },
+        { "IFF1", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 4 },
+        { "Watch", ImGuiTableColumnFlags_NoClip, 5 },
+        { "Flags", ImGuiTableColumnFlags_NoClip|ImGuiTableColumnFlags_DefaultHide, 8 },
+        { "Asm", ImGuiTableColumnFlags_NoClip, 12 }
 };
-#endif
 
 #define MAX_TRACEDUMP_SIZE ((MAX_TRACE_ITEMS+2) * UI_TRACELOG_NUM_COLUMNS * 16)
 
@@ -135,10 +105,8 @@ static struct {
     bool valid;
     ui_memedit_t memedit;
     ui_memedit_t memedit_integrated;
-    #if defined(CHIP_Z80)
     ui_memedit_t ioedit;
     ui_memedit_t ioedit_integrated;
-    #endif
     ui_dasm_t dasm;
     struct {
         bool cpu_controls;
@@ -221,7 +189,6 @@ static void ui_mem_write(int /*layer*/, uint16_t addr, uint8_t data, void* /*use
     sim_mem_w8(addr, data);
 }
 
-#if defined(CHIP_Z80)
 static uint8_t ui_io_read(int /*layer*/, uint16_t addr, void* /*user_data*/) {
     return sim_io_r8(addr);
 }
@@ -229,7 +196,6 @@ static uint8_t ui_io_read(int /*layer*/, uint16_t addr, void* /*user_data*/) {
 static void ui_io_write(int /*layer*/, uint16_t addr, uint8_t data, void* /*user_data*/) {
     sim_io_w8(addr, data);
 }
-#endif
 
 void ui_init() {
     assert(!ui.valid);
@@ -299,7 +265,6 @@ void ui_init() {
         desc.hide_addr_input = true;
         ui_memedit_init(&ui.memedit_integrated, &desc);
     }
-    #if defined(CHIP_Z80)
     {
         ui_memedit_desc_t desc = { };
         desc.title = "IO Editor";
@@ -317,16 +282,11 @@ void ui_init() {
         desc.hide_addr_input = true;
         ui_memedit_init(&ui.ioedit_integrated, &desc);
     }
-    #endif
     {
         ui_dasm_desc_t desc = { };
         desc.title = "Disassembler";
         desc.open = false;
-        #if defined(CHIP_6502)
-        desc.cpu_type = UI_DASM_CPUTYPE_M6502;
-        #elif defined(CHIP_Z80)
         desc.cpu_type = UI_DASM_CPUTYPE_Z80;
-        #endif
         desc.start_addr = 0;
         desc.read_cb = ui_mem_read;
         desc.x = 50;
@@ -354,10 +314,8 @@ void ui_shutdown() {
     ui_dasm_discard(&ui.dasm);
     ui_memedit_discard(&ui.memedit);
     ui_memedit_discard(&ui.memedit_integrated);
-    #if defined(CHIP_Z80)
     ui_memedit_discard(&ui.ioedit);
     ui_memedit_discard(&ui.ioedit_integrated);
-    #endif
     simgui_shutdown();
 }
 
@@ -573,9 +531,7 @@ void ui_frame() {
     ui_menu();
     ui_picking();
     ui_memedit_draw(&ui.memedit);
-    #if defined(CHIP_Z80)
     ui_memedit_draw(&ui.ioedit);
-    #endif
     ui_dasm_draw(&ui.dasm);
     ui_tracelog_timingdiagram_begin();
     ui_tracelog();
@@ -655,9 +611,7 @@ static void ui_menu(void) {
             ImGui::MenuItem("Timing Diagram", nullptr, &ui.window_open.timingdiagram);
             ImGui::MenuItem("Listing", "Alt+L", &ui.window_open.listing);
             ImGui::MenuItem("Memory Editor", "Alt+M", &ui.memedit.open);
-            #if defined(CHIP_Z80)
             ImGui::MenuItem("IO Editor", nullptr, &ui.ioedit.open);
-            #endif
             ImGui::MenuItem("Disassembler", "Alt+D", &ui.dasm.open);
             if (ImGui::MenuItem("Assembler", "Alt+A", ui_asm_is_window_open())) {
                 ui_asm_toggle_window_open();
@@ -753,29 +707,15 @@ static void ui_menu(void) {
     }
 }
 
-#if defined(CHIP_6502)
-static void ui_input_6502_vec(const char* label, const char* id, uint16_t addr) {
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("%s", label); ImGui::SameLine();
-    sim_mem_w16(addr, ui_util_input_u16(id, sim_mem_r16(addr)));
-}
-#endif
-
-#if defined(CHIP_Z80)
 static void ui_input_z80_intvec(const char* label, const char* id) {
     ImGui::AlignTextToFramePadding();
     ImGui::Text("%s", label); ImGui::SameLine();
     sim_z80_set_intvec(ui_util_input_u8(id, sim_z80_get_intvec()));
 }
-#endif
 
 static const char* ui_cpu_flags_as_string(uint8_t flags, char* buf, size_t buf_size) {
     assert(buf && (buf_size >= 9)); (void)buf_size;
-    #if defined(CHIP_6502)
-    const char* chrs[2] = { "czidbxvn", "CZIDBXVN" };
-    #else
     const char* chrs[2] = { "cnvxhyzs", "CNVXHYZS" };
-    #endif
     for (int i = 0; i < 8; i++) {
         buf[7 - i] = chrs[(flags>>i) & 1][i];
     }
@@ -783,48 +723,6 @@ static const char* ui_cpu_flags_as_string(uint8_t flags, char* buf, size_t buf_s
     return buf;
 }
 
-#if defined(CHIP_6502)
-static void ui_cpu_status_panel(void) {
-    const uint8_t ir = sim_6502_get_op();
-    const uint8_t p = sim_get_flags();
-    ImGui::Text("A:%02X X:%02X Y:%02X SP:%02X PC:%04X",
-        sim_6502_get_a(), sim_6502_get_x(), sim_6502_get_y(), sim_6502_get_sp(), sim_get_pc());
-    char p_buf[9];
-    ImGui::Text("P:%02X (%s) Cycle: %d", p, ui_cpu_flags_as_string(sim_get_flags(), p_buf, sizeof(p_buf)), sim_get_cycle()>>1);
-    ImGui::Text("OP:%02X [%s]\n", ir, trace_get_disasm(0));
-    ImGui::Text("Data:%02X Addr:%04X %s %s %s",
-        sim_get_data(), sim_get_addr(),
-        sim_6502_get_rw()?"R":"W",
-        sim_6502_get_clk0()?"CLK0":"clk0",
-        sim_6502_get_sync()?"SYNC":"sync");
-    ImGui::Separator();
-    ui_input_6502_vec("NMI vector (FFFA): ", "##nmi_vec", 0xFFFA);
-    ui_input_6502_vec("RES vector (FFFC): ", "##res_vec", 0xFFFC);
-    ui_input_6502_vec("IRQ vector (FFFE): ", "##irq_vec", 0xFFFE);
-    ImGui::Separator();
-    bool rdy_active = !sim_6502_get_rdy();
-    if (ImGui::Checkbox("RDY", &rdy_active)) {
-        sim_6502_set_rdy(!rdy_active);
-    }
-    ImGui::SameLine();
-    bool irq_active = !sim_6502_get_irq();
-    if (ImGui::Checkbox("IRQ", &irq_active)) {
-        sim_6502_set_irq(!irq_active);
-    }
-    ImGui::SameLine();
-    bool nmi_active = !sim_6502_get_nmi();
-    if (ImGui::Checkbox("NMI", &nmi_active)) {
-        sim_6502_set_nmi(!nmi_active);
-    }
-    ImGui::SameLine();
-    bool res_active = !sim_6502_get_res();
-    if (ImGui::Checkbox("RES", &res_active)) {
-        sim_6502_set_res(!res_active);
-    }
-}
-#endif
-
-#if defined(CHIP_Z80)
 static void ui_cpu_status_panel(void) {
     ImGui::Text("AF:%04X  BC:%04X  DE:%04X  HL:%04X", sim_z80_get_af(), sim_z80_get_bc(), sim_z80_get_de(), sim_z80_get_hl());
     ImGui::Text("AF'%04X  BC'%04X  DE'%04X  HL'%04X", sim_z80_get_af2(), sim_z80_get_bc2(), sim_z80_get_de2(), sim_z80_get_hl2());
@@ -850,22 +748,22 @@ static void ui_cpu_status_panel(void) {
         case (1<<5): t_str = "T6"; break;
     }
     ImGui::Text("Cycle:%s/%s DBus:%02X ABus:%04X %s",
-        m_str, t_str, sim_get_data(), sim_get_addr(), sim_z80_get_iff1() ? "IFF1":"iff1");
+                m_str, t_str, sim_get_data(), sim_get_addr(), sim_z80_get_iff1() ? "IFF1":"iff1");
     ImGui::Text("%s %s %s %s %s %s %s %s\n%s %s %s %s %s %s",
-        sim_z80_get_clk() ? "CLK":"clk",
-        sim_z80_get_m1() ? "m1":"M1",
-        sim_z80_get_mreq() ? "mreq":"MREQ",
-        sim_z80_get_iorq() ? "iorq":"IORQ",
-        sim_z80_get_rd() ? "rd":"RD",
-        sim_z80_get_wr() ? "wr":"WR",
-        sim_z80_get_rfsh() ? "rfsh":"RFSH",
-        sim_z80_get_halt() ? "halt":"HALT",
-        sim_z80_get_wait() ? "wait":"WAIT",
-        sim_z80_get_int() ? "int":"INT",
-        sim_z80_get_nmi() ? "nmi":"NMI",
-        sim_z80_get_reset() ? "reset":"RESET",
-        sim_z80_get_busrq() ? "busrq":"BUSRQ",
-        sim_z80_get_busak() ? "busak":"BUSAK");
+                sim_z80_get_clk() ? "CLK":"clk",
+                sim_z80_get_m1() ? "m1":"M1",
+                sim_z80_get_mreq() ? "mreq":"MREQ",
+                sim_z80_get_iorq() ? "iorq":"IORQ",
+                sim_z80_get_rd() ? "rd":"RD",
+                sim_z80_get_wr() ? "wr":"WR",
+                sim_z80_get_rfsh() ? "rfsh":"RFSH",
+                sim_z80_get_halt() ? "halt":"HALT",
+                sim_z80_get_wait() ? "wait":"WAIT",
+                sim_z80_get_int() ? "int":"INT",
+                sim_z80_get_nmi() ? "nmi":"NMI",
+                sim_z80_get_reset() ? "reset":"RESET",
+                sim_z80_get_busrq() ? "busrq":"BUSRQ",
+                sim_z80_get_busak() ? "busak":"BUSAK");
     ImGui::Separator();
     ui_input_z80_intvec("INT vector: ", "##int_vec");
     ImGui::Separator();
@@ -893,7 +791,6 @@ static void ui_cpu_status_panel(void) {
         sim_z80_set_busrq(!busrq_active);
     }
 }
-#endif
 
 static void ui_cassette_deck_controls(void) {
     const char* tooltip = 0;
@@ -974,11 +871,7 @@ static void ui_controls(void) {
     }
     ImGui::SetNextWindowPos({ ImGui::GetIO().DisplaySize.x - 300, 50 }, ImGuiCond_Once);
     ImGui::SetNextWindowSize({ 270, 480 }, ImGuiCond_Once);
-    #if defined(CHIP_6502)
-    const char* cpu_name = "MOS 6502";
-    #else
     const char* cpu_name = "Zilog Z80";
-    #endif
     if (ImGui::Begin(cpu_name, &ui.window_open.cpu_controls, ImGuiWindowFlags_None)) {
         /* cassette deck controls */
         ui_cassette_deck_controls();
@@ -994,12 +887,10 @@ static void ui_controls(void) {
                 ui_memedit_draw_content(&ui.memedit_integrated);
                 ImGui::EndTabItem();
             }
-            #if defined(CHIP_Z80)
             if (ImGui::BeginTabItem("IO")) {
                 ui_memedit_draw_content(&ui.ioedit_integrated);
                 ImGui::EndTabItem();
             }
-            #endif
             ImGui::EndTabBar();
         }
     }
@@ -1042,40 +933,6 @@ static void ui_tracelog_timingdiagram_end() {
     }
 }
 
-#if defined(CHIP_6502)
-static int ui_tracelog_print_item(int trace_index, int col_index, char* buf, size_t buf_size) {
-    const uint32_t cur_cycle = trace_get_cycle(trace_index);
-    char p_buf[9];
-    switch (col_index) {
-        case 0: return snprintf(buf, buf_size, "%5d/%d", cur_cycle >> 1, cur_cycle & 1);
-        case 1: return snprintf(buf, buf_size, "%s", trace_6502_get_sync(trace_index)?"SYNC":"    ");
-        case 2: return snprintf(buf, buf_size, "%c", trace_6502_get_rw(trace_index)?'R':'W');
-        case 3: return snprintf(buf, buf_size, "%04X", trace_get_addr(trace_index));
-        case 4: return snprintf(buf, buf_size, "%02X", trace_get_data(trace_index));
-        case 5: return snprintf(buf, buf_size, "%04X", trace_get_pc(trace_index));
-        case 6: return snprintf(buf, buf_size, "%02X", trace_6502_get_op(trace_index));
-        case 7: return snprintf(buf, buf_size, "%02X", trace_6502_get_a(trace_index));
-        case 8: return snprintf(buf, buf_size, "%02X", trace_6502_get_x(trace_index));
-        case 9: return snprintf(buf, buf_size, "%02X", trace_6502_get_y(trace_index));
-        case 10: return snprintf(buf, buf_size, "%02X", trace_6502_get_sp(trace_index));
-        case 11: return snprintf(buf, buf_size, "%02X", trace_get_flags(trace_index));
-        case 12:
-            if (ui.trace.watch_node_valid) {
-                return snprintf(buf, buf_size, "%c", trace_is_node_high(trace_index, ui.trace.watch_node_index) ? '1':'0');
-            }
-            else {
-                return snprintf(buf, buf_size, "%s", "??");
-            }
-        case 13: return snprintf(buf, buf_size, "%s", ui_cpu_flags_as_string(trace_get_flags(trace_index), p_buf, sizeof(p_buf)));
-        case 14: return snprintf(buf, buf_size, "%s", trace_6502_get_irq(trace_index)?"   ":"IRQ");
-        case 15: return snprintf(buf, buf_size, "%s", trace_6502_get_nmi(trace_index)?"   ":"NMI");
-        case 16: return snprintf(buf, buf_size, "%s", trace_6502_get_res(trace_index)?"   ":"RES");
-        case 17: return snprintf(buf, buf_size, "%s", trace_6502_get_rdy(trace_index)?"   ":"RDY");
-        case 18: return snprintf(buf, buf_size, "%s", trace_get_disasm(trace_index));
-        default: return snprintf(buf, buf_size, "%s", "???");
-    }
-}
-#elif defined(CHIP_Z80)
 static int ui_tracelog_print_item(int trace_index, int col_index, char* buf, size_t buf_size) {
     const uint32_t cur_cycle = trace_get_cycle(trace_index);
     char f_buf[9];
@@ -1123,7 +980,6 @@ static int ui_tracelog_print_item(int trace_index, int col_index, char* buf, siz
         default: return snprintf(buf, buf_size, "%s", "???");
     }
 }
-#endif
 
 static void ui_tracelog_table_setup_columns(void) {
     const float char_width = 8.0f;
@@ -1365,37 +1221,24 @@ const char* ui_trace_get_dump(void) {
     return ui.tracedump.buf;
 }
 
-#if defined(CHIP_6502)
-static const int num_time_diagram_nodes = 7;
-static struct { uint32_t node; const char* name; bool active_low; } time_diagram_nodes[num_time_diagram_nodes] = {
-    { p6502_clk0, "CLK0", false },
-    { p6502_sync, "SYNC", false },
-    { p6502_rw, "RW", false },
-    { p6502_irq, "IRQ", true },
-    { p6502_nmi, "NMI", true },
-    { p6502_res, "RES", true },
-    { p6502_rdy, "RDY", false },
-};
-#elif defined(CHIP_Z80)
 static const int num_time_diagram_nodes = 15;
 static struct { uint32_t node; const char* name; bool active_low; } time_diagram_nodes[num_time_diagram_nodes] = {
-    { pz80_clk, "CLK", false },
-    { pz80__m1, "M1", true },
-    { pz80__mreq, "MREQ", true },
-    { pz80__iorq, "IORQ", true },
-    { pz80__rd, "RD", true },
-    { pz80__wr, "WR", true },
-    { pz80__rfsh, "RFSH", true },
-    { pz80__halt, "HALT", true },
-    { pz80__wait, "WAIT", true },
-    { pz80__int, "INT", true },
-    { pz80__nmi, "NMI", true },
-    { pz80__reset, "RESET", true },
-    { pz80__busrq, "BUSRQ", true },
-    { pz80__busak, "BUSAK", true },
-    { 1278, "IFF1", false },
+        { pz80_clk, "CLK", false },
+        { pz80__m1, "M1", true },
+        { pz80__mreq, "MREQ", true },
+        { pz80__iorq, "IORQ", true },
+        { pz80__rd, "RD", true },
+        { pz80__wr, "WR", true },
+        { pz80__rfsh, "RFSH", true },
+        { pz80__halt, "HALT", true },
+        { pz80__wait, "WAIT", true },
+        { pz80__int, "INT", true },
+        { pz80__nmi, "NMI", true },
+        { pz80__reset, "RESET", true },
+        { pz80__busrq, "BUSRQ", true },
+        { pz80__busak, "BUSAK", true },
+        { 1278, "IFF1", false },
 };
-#endif
 
 static void ui_timingdiagram(void) {
     if (!ui.window_open.timingdiagram) {
@@ -1931,11 +1774,7 @@ static ImVec2 draw_header(ImVec2 c_pos, float win_width) {
     ImDrawList* dl = ImGui::GetWindowDrawList();
     const float r = 1.0f;
     const float d = 3.0f;
-    #if defined(CHIP_6502)
-        const char* title = "*** VISUAL 6502 ***";
-    #elif defined(CHIP_Z80)
-        const char* title = "*** VISUALZ80 ***";
-    #endif
+    const char* title = "*** VISUALZ80 ***";
     const char* subtitle = "*** remix ***";
     ImVec2 pos = { (c_pos.x + (win_width - ((float)strlen(title)) * d * 8.0f) * 0.5f), c_pos.y + 10.0f };
     draw_string_wobble(dl, title, pos, r, d, pal_0, hdr_time, 0.1f, 1.0f, 5.0f, 1.0f);
@@ -1947,13 +1786,8 @@ static ImVec2 draw_header(ImVec2 c_pos, float win_width) {
 #define NUM_FOOTERS (27)
 static const char* footers[NUM_FOOTERS] = {
     "SOWACO proudly presents",
-    #if defined(CHIP_6502)
-    "a 2019 production",
-    "VISUAL 6502 REMIX",
-    #elif defined(CHIP_Z80)
     "a 2021 production",
     "VISUAL Z80 REMIX",
-    #endif
     "Built with:",
     "visual6502",
     "perfect6502",
@@ -1977,11 +1811,7 @@ static const char* footers[NUM_FOOTERS] = {
     "for reversing the 6502",
     "...and the Z80!",
     "...and of course...",
-    #if defined(CHIP_6502)
-    "6502 4EVER!!!",
-    #elif defined(CHIP_Z80)
     "Z80 4EVER!!!",
-    #endif
 };
 
 static const uint32_t pal_2[32] = {

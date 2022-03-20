@@ -61,26 +61,6 @@ int sim_get_num_nodes(void);
 bool sim_get_node_state(int node_index);
 void sim_set_node_state(int node_index, bool high);
 
-#if defined(CHIP_6502)
-uint8_t sim_6502_get_a(void);
-uint8_t sim_6502_get_x(void);
-uint8_t sim_6502_get_y(void);
-uint8_t sim_6502_get_sp(void);
-uint8_t sim_6502_get_op(void);
-bool sim_6502_get_clk0(void);
-bool sim_6502_get_rw(void);
-bool sim_6502_get_sync(void);
-void sim_6502_set_rdy(bool high);
-void sim_6502_set_irq(bool high);
-void sim_6502_set_nmi(bool high);
-void sim_6502_set_res(bool high);
-bool sim_6502_get_irq(void);
-bool sim_6502_get_nmi(void);
-bool sim_6502_get_res(void);
-bool sim_6502_get_rdy(void);
-#endif
-
-#if defined(CHIP_Z80)
 void sim_io_w8(uint16_t addr, uint8_t val);
 uint8_t sim_io_r8(uint16_t addr);
 void sim_io_w16(uint16_t addr, uint16_t val);
@@ -129,7 +109,6 @@ uint8_t sim_z80_get_t(void);
 
 void sim_z80_set_intvec(uint8_t val);
 uint8_t sim_z80_get_intvec(void);
-#endif
 
 #if defined(__cplusplus)
 } // extern "C"

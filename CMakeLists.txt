@@ -21,5 +21,3 @@ fips_add_subdirectory(ext/texteditor)
 fips_add_subdirectory(ext/asmx)
 fips_add_subdirectory(ext/sokol)
 fips_finish()
-
-

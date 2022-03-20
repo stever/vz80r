@@ -22,20 +22,6 @@ uint8_t trace_get_data(uint32_t index);
 uint16_t trace_get_pc(uint32_t index);
 uint8_t trace_get_flags(uint32_t index);
 const char* trace_get_disasm(uint32_t index);
-#if defined(CHIP_6502)
-uint8_t trace_6502_get_a(uint32_t index);
-uint8_t trace_6502_get_x(uint32_t index);
-uint8_t trace_6502_get_y(uint32_t index);
-uint8_t trace_6502_get_sp(uint32_t index);
-uint8_t trace_6502_get_op(uint32_t index);
-bool trace_6502_get_clk0(uint32_t index);
-bool trace_6502_get_rw(uint32_t index);
-bool trace_6502_get_sync(uint32_t index);
-bool trace_6502_get_irq(uint32_t index);
-bool trace_6502_get_nmi(uint32_t index);
-bool trace_6502_get_res(uint32_t index);
-bool trace_6502_get_rdy(uint32_t index);
-#else
 bool trace_z80_get_clk(uint32_t index);
 bool trace_z80_get_m1(uint32_t index);
 bool trace_z80_get_mreq(uint32_t index);
@@ -82,7 +68,6 @@ uint16_t trace_z80_get_ix(uint32_t index);
 uint16_t trace_z80_get_iy(uint32_t index);
 uint16_t trace_z80_get_sp(uint32_t index);
 uint16_t trace_z80_get_wz(uint32_t index);
-#endif
 
 void trace_ui_set_scroll_to_end(bool b);
 bool trace_ui_get_scroll_to_end(void);

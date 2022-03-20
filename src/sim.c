@@ -3,11 +3,7 @@
 //
 //  Wrapper functions around perfect6502.
 //------------------------------------------------------------------------------
-#if defined(CHIP_6502)
-#include "perfect6502.h"
-#elif defined(CHIP_Z80)
 #include "perfectz80.h"
-#endif
 #include "nodenames.h"
 #include "nodegroups.h"
 #include "sim.h"
@@ -71,10 +67,6 @@ void sim_shutdown(void) {
 
 void sim_start(void) {
     assert(sim.valid);
-    // on 6502, run through the initial reset sequence
-    #if defined(CHIP_6502)
-    sim_step(17);
-    #endif
 }
 
 void sim_frame(void) {
@@ -104,23 +96,12 @@ void sim_step(int num_half_cycles) {
 
 void sim_step_op(void) {
     assert(sim.valid);
-    #if defined(CHIP_6502)
-        int num_sync = 0;
-        do {
-            sim_step(1);
-            if (cpu_readSYNC(sim.cpu_state)) {
-                num_sync++;
-            }
-        }
-        while (num_sync != 2);
-    #elif defined(CHIP_Z80)
-        bool prev_m1, cur_m1;
-        do {
-            prev_m1 = cpu_readM1(sim.cpu_state);
-            sim_step(1);
-            cur_m1 = cpu_readM1(sim.cpu_state);
-        } while (!(prev_m1 && !cur_m1));   // M1 pin is active-low!
-    #endif
+    bool prev_m1, cur_m1;
+    do {
+        prev_m1 = cpu_readM1(sim.cpu_state);
+        sim_step(1);
+        cur_m1 = cpu_readM1(sim.cpu_state);
+    } while (!(prev_m1 && !cur_m1));   // M1 pin is active-low!
 }
 
 int sim_find_node(const char* name) {
@@ -189,7 +170,6 @@ void sim_mem_clear(uint16_t addr, uint16_t num_bytes) {
     }
 }
 
-#if defined(CHIP_Z80)
 void sim_io_w8(uint16_t addr, uint8_t val) {
     cpu_io[addr] = val;
 }
@@ -197,7 +177,6 @@ void sim_io_w8(uint16_t addr, uint8_t val) {
 uint8_t sim_io_r8(uint16_t addr) {
     return cpu_io[addr];
 }
-#endif
 
 uint16_t sim_get_addr(void) {
     assert(sim.valid);
@@ -244,11 +223,7 @@ bool sim_read_transistor_on(range_t from_buffer) {
 
 bool sim_is_ignore_picking_highlight_node(int node_index) {
     // these nodes are all over the place, don't highlight them in picking
-    #if defined(CHIP_6502)
-    return (p6502_vcc == node_index) || (p6502_vss == node_index);
-    #elif defined(CHIP_Z80)
     return (pz80_vcc == node_index) || (pz80_vss == node_index);
-    #endif
 }
 
 uint16_t sim_get_pc(void) {
@@ -256,13 +231,7 @@ uint16_t sim_get_pc(void) {
 }
 
 uint8_t sim_get_flags(void) {
-    #if defined(CHIP_6502)
-    return cpu_readP(sim.cpu_state);
-    #elif defined(CHIP_Z80)
     return cpu_readF(sim.cpu_state);
-    #else
-    #error "Unknown CPU define!"
-    #endif
 }
 
 int sim_get_num_nodes(void) {
@@ -277,77 +246,6 @@ void sim_set_node_state(int node_index, bool high) {
     cpu_write_node(sim.cpu_state, node_index, high);
 }
 
-#if defined(CHIP_6502)
-uint8_t sim_6502_get_a(void) {
-    return cpu_readA(sim.cpu_state);
-}
-
-uint8_t sim_6502_get_x(void) {
-    return cpu_readX(sim.cpu_state);
-}
-
-uint8_t sim_6502_get_y(void) {
-    return cpu_readY(sim.cpu_state);
-}
-
-uint8_t sim_6502_get_sp(void) {
-    return cpu_readSP(sim.cpu_state);
-}
-
-uint8_t sim_6502_get_op(void) {
-    return cpu_readIR(sim.cpu_state);
-}
-
-uint8_t sim_6502_get_p(void) {
-    return cpu_readP(sim.cpu_state);
-}
-
-bool sim_6502_get_clk0(void) {
-    return cpu_readCLK0(sim.cpu_state);
-}
-
-bool sim_6502_get_rw(void) {
-    return cpu_readRW(sim.cpu_state);
-}
-
-bool sim_6502_get_sync(void) {
-    return cpu_readSYNC(sim.cpu_state);
-}
-
-void sim_6502_set_rdy(bool high) {
-    cpu_writeRDY(sim.cpu_state, high);
-}
-
-bool sim_6502_get_rdy(void) {
-    return cpu_readRDY(sim.cpu_state);
-}
-
-void sim_6502_set_irq(bool high) {
-    cpu_writeIRQ(sim.cpu_state, high);
-}
-
-bool sim_6502_get_irq(void) {
-    return cpu_readIRQ(sim.cpu_state);
-}
-
-void sim_6502_set_nmi(bool high) {
-    cpu_writeNMI(sim.cpu_state, high);
-}
-
-bool sim_6502_get_nmi(void) {
-    return cpu_readNMI(sim.cpu_state);
-}
-
-void sim_6502_set_res(bool high) {
-    cpu_writeRES(sim.cpu_state, high);
-}
-
-bool sim_6502_get_res(void) {
-    return cpu_readRES(sim.cpu_state);
-}
-#endif
-
-#if defined(CHIP_Z80)
 uint16_t sim_z80_get_af(void) {
     return (cpu_readA(sim.cpu_state) << 8) | cpu_readF(sim.cpu_state);
 }
@@ -523,7 +421,6 @@ uint8_t sim_z80_get_m(void) {
 uint8_t sim_z80_get_t(void) {
     return cpu_readT(sim.cpu_state);
 }
-#endif
 
 static void sim_add_nodegroup(const char* name, range_t nodegroup) {
     assert(name);
@@ -537,17 +434,6 @@ static void sim_add_nodegroup(const char* name, range_t nodegroup) {
 
 static void sim_init_nodegroups(void) {
     // setup node groups
-    #if defined(CHIP_6502)
-    sim_add_nodegroup("Addr", RANGE(nodegroup_ab));
-    sim_add_nodegroup("Data", RANGE(nodegroup_db));
-    sim_add_nodegroup("IR", RANGE(nodegroup_ir));
-    sim_add_nodegroup("A", RANGE(nodegroup_a));
-    sim_add_nodegroup("X", RANGE(nodegroup_x));
-    sim_add_nodegroup("Y", RANGE(nodegroup_y));
-    sim_add_nodegroup("S", RANGE(nodegroup_sp));
-    sim_add_nodegroup("PCH", RANGE(nodegroup_pch));
-    sim_add_nodegroup("PCL", RANGE(nodegroup_pcl));
-    #elif defined(CHIP_Z80)
     sim_add_nodegroup("Addr", RANGE(nodegroup_ab));
     sim_add_nodegroup("Data", RANGE(nodegroup_db));
     sim_add_nodegroup("IR", RANGE(nodegroup_ir));
@@ -588,7 +474,6 @@ static void sim_init_nodegroups(void) {
     sim_add_nodegroup("ALU_Out", RANGE(nodegroup_aluout));
     sim_add_nodegroup("DBus", RANGE(nodegroup_dbus));
     sim_add_nodegroup("DLatch", RANGE(nodegroup_dlatch));
-    #endif
 }
 
 sim_nodegroup_range_t sim_get_nodegroups(void) {

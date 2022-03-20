@@ -2,13 +2,8 @@
 //  trace.c
 //  Keep a history of chip state.
 //------------------------------------------------------------------------------
-#if defined(CHIP_6502)
-#include "perfect6502.h"
-#include "chips/m6502dasm.h"
-#elif defined(CHIP_Z80)
 #include "perfectz80.h"
 #include "chips/z80dasm.h"
-#endif
 #include "nodenames.h"
 #include "nodegroups.h"
 #include "trace.h"
@@ -173,11 +168,7 @@ uint16_t trace_get_pc(uint32_t index) {
 }
 
 uint8_t trace_get_flags(uint32_t index) {
-    #if defined(CHIP_6502)
-    return read_nodes(index, 8, nodegroup_p);
-    #else
     return read_nodes(index, 8, is_node_high(index, pz80_ex_af) ? nodegroup_reg_f : nodegroup_reg_ff);
-    #endif
 }
 
 const char* trace_get_disasm(uint32_t index) {
@@ -185,57 +176,6 @@ const char* trace_get_disasm(uint32_t index) {
     return trace.items.dasm[idx].str;
 }
 
-#if defined(CHIP_6502)
-uint8_t trace_6502_get_a(uint32_t index) {
-    return read_nodes(index, 8, nodegroup_a);
-}
-
-uint8_t trace_6502_get_x(uint32_t index) {
-    return read_nodes(index, 8, nodegroup_x);
-}
-
-uint8_t trace_6502_get_y(uint32_t index) {
-    return read_nodes(index, 8, nodegroup_y);
-}
-
-uint8_t trace_6502_get_sp(uint32_t index) {
-    return read_nodes(index, 8, nodegroup_sp);
-}
-
-uint8_t trace_6502_get_op(uint32_t index) {
-    return ~read_nodes(index, 8, nodegroup_ir);
-}
-
-bool trace_6502_get_rw(uint32_t index) {
-    return is_node_high(index, p6502_rw);
-}
-
-bool trace_6502_get_sync(uint32_t index) {
-    return is_node_high(index, p6502_sync);
-}
-
-bool trace_6502_get_clk0(uint32_t index) {
-    return is_node_high(index, p6502_clk0);
-}
-
-bool trace_6502_get_irq(uint32_t index) {
-    return is_node_high(index, p6502_irq);
-}
-
-bool trace_6502_get_nmi(uint32_t index) {
-    return is_node_high(index, p6502_nmi);
-}
-
-bool trace_6502_get_res(uint32_t index) {
-    return is_node_high(index, p6502_res);
-}
-
-bool trace_6502_get_rdy(uint32_t index) {
-    return is_node_high(index, p6502_rdy);
-}
-#endif
-
-#if defined(CHIP_Z80)
 bool trace_z80_get_m1(uint32_t index) {
     return is_node_high(index, pz80__m1);
 }
@@ -464,7 +404,6 @@ uint16_t trace_z80_get_sp(uint32_t index) {
 uint16_t trace_z80_get_wz(uint32_t index) {
     return (trace_z80_get_w(index)<<8) | trace_z80_get_z(index);
 }
-#endif
 
 // disassembler callbacks
 static uint8_t dasm_inp_cb(void* user_data) {
@@ -483,24 +422,19 @@ static void dasm_outp_cb(char c, void* user_data) {
 static void trace_disassemble(void) {
     trace.dasm.cur_addr = trace.dasm.op_addr;
     trace.dasm.out_str_index = 0;
-    #if defined(CHIP_6502)
+    // skip disassembly if last byte was a prefix
+    if (!trace.dasm.op_prefixed) {
         memset(&trace.dasm.out_str, 0, sizeof(trace.dasm.out_str));
-        m6502dasm_op(trace.dasm.op_addr, dasm_inp_cb, dasm_outp_cb, 0);
-    #elif defined(CHIP_Z80)
-        // skip disassembly if last byte was a prefix
-        if (!trace.dasm.op_prefixed) {
-            memset(&trace.dasm.out_str, 0, sizeof(trace.dasm.out_str));
-            z80dasm_op(trace.dasm.op_addr, dasm_inp_cb, dasm_outp_cb, 0);
-        }
-        switch (sim_mem_r8(trace.dasm.op_addr)) {
-            case 0xCB: case 0xDD: case 0xED: case 0xFD:
-                trace.dasm.op_prefixed = true;
-                break;
-            default:
-                trace.dasm.op_prefixed = false;
-                break;
-        }
-    #endif
+        z80dasm_op(trace.dasm.op_addr, dasm_inp_cb, dasm_outp_cb, 0);
+    }
+    switch (sim_mem_r8(trace.dasm.op_addr)) {
+        case 0xCB: case 0xDD: case 0xED: case 0xFD:
+            trace.dasm.op_prefixed = true;
+            break;
+        default:
+            trace.dasm.op_prefixed = false;
+            break;
+    }
 }
 
 void trace_store(void) {
@@ -516,36 +450,18 @@ void trace_store(void) {
 
     // find start of instruction (first half tick after sync)
     bool disasm = false;
-    #if defined(CHIP_6502)
-        if (!sim_6502_get_sync() && (trace_num_items() > 1) && trace_6502_get_sync(1)) {
-            trace.flip_bits ^= TRACE_FLIPBIT_OP;
-            disasm = true;
-        }
-        if (sim_6502_get_clk0()) {
-            trace.flip_bits |= TRACE_FLIPBIT_CLK;
-        }
-        else {
-            trace.flip_bits &= ~TRACE_FLIPBIT_CLK;
-        }
-        // we need to catch the next instruction address while sync is active
-        // (at the end of the current instruction)
-        if (sim_6502_get_sync()) {
-            trace.dasm.op_addr = sim_get_addr();
-        }
-    #else
-        if ((trace_num_items() <= 1) || (!sim_z80_get_m1() && (trace_num_items() > 1) && trace_z80_get_m1(1))) {
-            trace.flip_bits ^= TRACE_FLIPBIT_OP;
-            disasm = true;
-            // important, need to catch address bus for proper instruction start, not read PC register!
-            trace.dasm.op_addr = sim_get_addr();
-        }
-        if (sim_z80_get_clk()) {
-            trace.flip_bits |= TRACE_FLIPBIT_CLK;
-        }
-        else {
-            trace.flip_bits &= ~TRACE_FLIPBIT_CLK;
-        }
-    #endif
+    if ((trace_num_items() <= 1) || (!sim_z80_get_m1() && (trace_num_items() > 1) && trace_z80_get_m1(1))) {
+        trace.flip_bits ^= TRACE_FLIPBIT_OP;
+        disasm = true;
+        // important, need to catch address bus for proper instruction start, not read PC register!
+        trace.dasm.op_addr = sim_get_addr();
+    }
+    if (sim_z80_get_clk()) {
+        trace.flip_bits |= TRACE_FLIPBIT_CLK;
+    }
+    else {
+        trace.flip_bits &= ~TRACE_FLIPBIT_CLK;
+    }
     trace.items.flip_bits[idx] = trace.flip_bits;
 
     // disassemble current instruction
